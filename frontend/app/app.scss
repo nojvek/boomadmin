@@ -1,0 +1,12 @@
+@import 'bulma/sass/base/minireset';
+
+html {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px; // root rem size
+  font-weight: 300;
+}
+
+a,
+img {
+  -webkit-user-drag: none;
+}

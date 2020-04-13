@@ -1,0 +1,93 @@
+doctype html
+html
+  head
+    title= `BoomAdmin | ${crumbs[0].label}`
+    link(rel="icon" href="data:,")
+    style(type="text/css").
+      html {
+        font-family: "Open Sans";
+        font-size: 16px;
+      }
+
+      body {
+        padding: 20px;
+        margin: 0;
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .tableScroller {
+        max-height: calc(100vh - 100px);
+        overflow: auto;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+      }
+
+      table {
+        border-collapse: collapse;
+        position: relative;
+        text-align: left;
+      }
+
+      td, th {
+        border: 1px solid #eee;
+        padding: 5px 10px;
+        white-space: pre-wrap;
+      }
+
+      th {
+        background: #ddd;
+        border: 1px solid #ccc;
+        position: sticky;
+        top: 0;
+      }
+
+      .breadcrumbs {
+        margin-bottom: 20px
+      }
+
+      .crumbCaret {
+        margin-right: 5px;
+        margin-left: 5px;
+      }
+
+  body
+    .breadcrumbs
+      each crumb, i in crumbs
+        if i > 0
+          span.crumbCaret ▹
+        if i < crumbs.length - 1
+          a(href=crumb.href)= crumb.label
+        else
+          = crumb.label
+
+    .tableScroller
+      - const resultColumns = columns.filter(col => !col.startsWith(`label$`))
+      table
+        thead
+          tr
+            each column in resultColumns
+              th= column
+        tbody
+            each row in rows
+              tr
+                each column in resultColumns
+                  td
+                    - const val = row[column]
+                    - const valProto = val && val.__proto__
+
+                    if refs.hasOwnProperty(column)
+                      - const labelColumn = `label$${column}`
+                      a(href=refs[column].replace(`$$`, val))= row[labelColumn] || val
+                    else if valProto  === Object.prototype
+                      = JSON.stringify(val, null, `  `).slice(0, 200)
+                    else if valProto === Date.prototype
+                      = val.toLocaleString()
+                    else
+                      = val

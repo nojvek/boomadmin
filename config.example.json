@@ -1,0 +1,15 @@
+{
+  "serve": {
+    "hostname": "localhost",
+    "port": 8080
+  },
+  "db": {
+    "dbType": "mysql",
+    "host": "localhost",
+    "user": "root",
+    "password": "",
+    "database": "mydbname",
+
+    "tableLabelColumns": {}
+  }
+}

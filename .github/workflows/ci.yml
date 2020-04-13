@@ -1,0 +1,15 @@
+name: BoomAdmin CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+      - run: yarn install --frozen-lockfile
+      - run: yarn lint
+      - run: yarn build
+        env:
+          PROGRESS: 0
