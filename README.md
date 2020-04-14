@@ -2,6 +2,8 @@
 
 boomadmin - MySQL db explorer with SQL builder
 
+![boomadmin](https://user-images.githubusercontent.com/1018196/79173102-755b0380-7dab-11ea-8a31-fa0f58d4dcb9.gif)
+
 ## Usage
 
 1.  Clone repo
