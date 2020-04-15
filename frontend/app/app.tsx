@@ -17,6 +17,7 @@ import {Table, TableColumn, TableProps} from './components/table';
 import {ClauseBuilder} from './components/clause-builder';
 import {ObjectEditor} from './components/object-editor';
 import {DragRule, DragRulePosition} from './components/drag-rule';
+import {JsonBuilder} from './components/json-builder';
 
 const labelColumnPrefix = `$label$`;
 const localStorageStateKey = `boomadminState`;
@@ -331,6 +332,7 @@ class App extends Component<{}, AppState> {
                     onValueChange={this.handleSelectQueryChange}
                   />
                 ) : null}
+                <JsonBuilder value={selectQuery} />
               </div>
             ) : null}
             <div class={styles.tablePanel}>
