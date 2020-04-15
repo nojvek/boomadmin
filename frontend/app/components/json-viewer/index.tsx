@@ -119,17 +119,17 @@ class ValueView extends Component<ValueViewProps, ValueViewState> {
   }
 }
 
-export interface JsonBuilderProps<ValueT> {
+export interface JsonViewerProps<ValueT> {
   value: ValueT;
   onValueChange?: (newValue: ValueT) => void;
 }
 
-export class JsonBuilder<ValueT> extends Component<JsonBuilderProps<ValueT>, {}> {
+export class JsonViewer<ValueT> extends Component<JsonViewerProps<ValueT>, {}> {
   render() {
     const {value} = this.props;
 
     return (
-      <div class={cx(styles.JsonBuilder)}>
+      <div class={cx(styles.JsonViewer)}>
         <ValueView value={value} />
       </div>
     );

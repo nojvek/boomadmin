@@ -1,12 +1,13 @@
 import {h, Component} from 'preact';
 import cx from 'classnames';
-import {jsonStringifyIfPojo} from 'common/util/pojo';
+import {isPojo} from 'common/util/pojo';
 import {DbForeignKeyRef, DbTableColumn} from 'common/api/db-schema';
 import {CountForeignReferencesResult} from 'common/api/api-types';
 import {makeHref} from '../../util/url-state';
 import styles from './index.jss';
 import commonStyles from '../../util/jss/common-styles.jss';
 import {InspectablePromise} from '../../util/inspectable-promise';
+import {JsonViewer} from '../json-viewer';
 
 export const enum FieldType {
   Text = `text`,
@@ -64,7 +65,7 @@ export class ObjectEditor extends Component<ObjectEditorProps, ObjectEditorState
                     {hrefLabel ? ` (${hrefLabel})` : ``}
                   </a>
                 ) : (
-                  <div class={styles.fieldValue}>{jsonStringifyIfPojo(value, true) || `<empty>`}</div>
+                  <div class={styles.fieldValue}>{isPojo(value) ? <JsonViewer value={value} /> : value}</div>
                 )}
               </div>
             );

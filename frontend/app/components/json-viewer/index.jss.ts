@@ -1,9 +1,9 @@
 import {styleSheet, asJss} from '../../util/jss';
 
 const jss = asJss({
-  JsonBuilder: {
-    margin: `2rem`,
+  JsonViewer: {
     fontFamily: `Menlo, Monaco, 'Courier New', monospace`,
+    marginLeft: `1rem`,
   },
   null: {
     color: `#F08852`,
