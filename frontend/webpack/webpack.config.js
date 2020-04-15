@@ -127,6 +127,18 @@ const rules = [
       },
     ],
   },
+  {
+    test: /\.svg$/,
+    include: `${rootDir}/node_modules/@fortawesome/fontawesome-pro/svgs`,
+    use: [
+      {
+        loader: `raw-loader`,
+        options: {
+          esModule: false,
+        },
+      },
+    ],
+  },
 ];
 
 const stats = {

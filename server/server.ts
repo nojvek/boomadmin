@@ -1,10 +1,10 @@
 /* eslint-env node */
 
 import fs from 'fs';
-import rison from 'rison';
 import express, {Router} from 'express';
 import serverTiming from 'server-timing';
 import {SelectFromTableParams} from '../common/api/api-types';
+import {jsonUrlDecode} from '../common/util/json-url';
 import {ServerConfig} from './config';
 import {apiResponse} from './util/api';
 import {connectToDb, getDbSchema, selectFromTable, countForeignReferences} from './api/query';
@@ -39,7 +39,7 @@ apiRouter
     `/select`,
     apiResponse((req) => {
       const queryStr = req.url.substr(req.url.indexOf(`?`) + 1);
-      const query: SelectFromTableParams = rison.decode(decodeURI(queryStr));
+      const query: SelectFromTableParams = jsonUrlDecode(queryStr);
       console.info(`/select`, query);
       return selectFromTable(query);
     }),

@@ -4,6 +4,7 @@
 
 import rison from 'rison';
 import {SelectQuery} from 'common/api/sql-types';
+import {jsonUrlEncode, jsonUrlDecode} from 'common/util/json-url';
 
 export const SchemaTable = `$schema`;
 
@@ -14,7 +15,7 @@ export interface UrlState {
 export function parseUrlState(url: string): UrlState {
   const hash = /#(.*)$/.exec(url)?.[1];
   if (hash) {
-    const selectQuery: SelectQuery = rison.decode(decodeURI(hash));
+    const selectQuery: SelectQuery = jsonUrlDecode(hash);
     return {selectQuery};
   }
 
@@ -41,7 +42,7 @@ export function makeHref(params: MakeHrefParams): string {
     }
   }
 
-  return `#${encodeURI(rison.encode(selectQuery))}`;
+  return `#${jsonUrlEncode(selectQuery)}`;
 }
 
 /**
