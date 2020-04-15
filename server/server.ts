@@ -2,9 +2,9 @@
 
 import fs from 'fs';
 import express, {Router} from 'express';
+import bodyParser from 'body-parser';
 import serverTiming from 'server-timing';
 import {SelectFromTableParams} from '../common/api/api-types';
-import {jsonUrlDecode} from '../common/util/json-url';
 import {ServerConfig} from './config';
 import {apiResponse} from './util/api';
 import {connectToDb, getDbSchema, selectFromTable, countForeignReferences} from './api/query';
@@ -12,6 +12,7 @@ import {connectToDb, getDbSchema, selectFromTable, countForeignReferences} from 
 // setup express as server
 const app = express();
 app.use(serverTiming({precision: 2}));
+app.use(bodyParser.json({type: [`text/plain`, `application/json`]}));
 
 // load dbConf
 const rootDir = `${__dirname}/..`;
@@ -35,11 +36,10 @@ apiRouter
     `/_dbSchema`,
     apiResponse((_req) => getDbSchema()),
   )
-  .get(
+  .post(
     `/select`,
     apiResponse((req) => {
-      const queryStr = req.url.substr(req.url.indexOf(`?`) + 1);
-      const query: SelectFromTableParams = jsonUrlDecode(queryStr);
+      const query: SelectFromTableParams = req.body;
       console.info(`/select`, query);
       return selectFromTable(query);
     }),

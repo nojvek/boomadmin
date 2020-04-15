@@ -1,6 +1,6 @@
-import rison from 'rison';
 import {apiClient} from '../util/api-client';
 import {DbSchema} from 'common/api/db-schema';
+import {jsonUrlDecode, jsonUrlEncode} from 'common/util/json-url';
 import {
   CountForeignReferencesResult,
   CountForeignReferencesParams,
@@ -15,7 +15,7 @@ export async function getDbSchema(): Promise<DbSchema> {
 }
 
 export async function selectFromTable(query: SelectFromTableParams): Promise<SelectFromTableResult> {
-  return await apiClient.get(`${apiUrl}/select?${encodeURI(rison.encode(query))}`);
+  return await apiClient.post(`${apiUrl}/select`, query);
 }
 
 export async function countForeignReferences({
