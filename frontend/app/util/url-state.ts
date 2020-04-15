@@ -2,7 +2,6 @@
  * Utility functions to map location.href and location.hash to hash state object and vice versa
  */
 
-import rison from 'rison';
 import {SelectQuery} from 'common/api/sql-types';
 import {jsonUrlEncode, jsonUrlDecode} from 'common/util/json-url';
 

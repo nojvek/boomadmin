@@ -1,6 +1,5 @@
 import {apiClient} from '../util/api-client';
 import {DbSchema} from 'common/api/db-schema';
-import {jsonUrlDecode, jsonUrlEncode} from 'common/util/json-url';
 import {
   CountForeignReferencesResult,
   CountForeignReferencesParams,
