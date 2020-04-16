@@ -39,6 +39,7 @@
     "preact": "10.3.3",
     "prettier": "1.19.1",
     "prettier-eslint": "9.0.1",
+    "raw-loader": "4.0.1",
     "sass": "1.26.2",
     "sass-loader": "8.0.2",
     "server-timing": "3.2.1",

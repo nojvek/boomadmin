@@ -15,9 +15,17 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "Launch Server",
       "skipFiles": ["<node_internals>/**"],
       "args": ["${workspaceFolder}/server/server.ts"],
+      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"]
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Launch Dumper",
+      "skipFiles": ["<node_internals>/**"],
+      "args": ["${workspaceFolder}/data/scriptures_v2/dumper.ts"],
       "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"]
     }
   ]
