@@ -21,6 +21,13 @@ export interface Person {
   body: Translations;
 }
 
+export interface Phrase {
+  kind: 'Phrase';
+  id: string;
+  phrase: Translations;
+  explanation: Translations;
+}
+
 export interface Scripture {
   kind: 'Scripture';
   id: string;
@@ -48,7 +55,7 @@ export interface Verse {
 }
 
 export interface Stanza {
-  kind: 'Chapter';
+  kind: 'Stanza';
   id: string;
   slug: string;
   body: Translations;

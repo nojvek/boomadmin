@@ -1,5 +1,5 @@
 import mysql from 'mysql2';
-import {Scripture, Chapter, Verse, Stanza, Person, Obj, RootNav} from './schema.d';
+import {Scripture, Chapter, Verse, Stanza, Person, Obj, RootNav, Phrase} from './schema.d';
 
 const db = mysql
   .createPool({
@@ -12,11 +12,12 @@ const db = mysql
 
 // const objectsDir = `${__dirname}/objects`;
 const objects = {
-  root: {} as RootNav,
-  scriptures: {} as Obj<Scripture>,
-  chapters: {} as Obj<Chapter>,
-  stanzas: {} as Obj<Stanza>,
-  persons: {} as Obj<Person>,
+  $Root: {} as RootNav,
+  Scripture: {} as Obj<Scripture>,
+  Chapter: {} as Obj<Chapter>,
+  Stanza: {} as Obj<Stanza>,
+  Person: {} as Obj<Person>,
+  Phrase: {} as Obj<Phrase>,
 };
 
 async function getPersons(): Promise<{persons: Obj<Person>}> {
@@ -39,27 +40,77 @@ async function getPersons(): Promise<{persons: Obj<Person>}> {
   `;
   const [personRows] = await db.execute(personsSql);
 
-  for (const row of personRows) {
+  for (const personRow of personRows) {
     const person: Person = {
       kind: `Person`,
-      id: row.id,
-      slug: row.slug,
+      id: personRow.id,
+      slug: personRow.slug,
       name: {
-        eng: row.nameEng,
-        guj: row.nameGuj,
-        gujLipi: row.nameGujLipi,
-        gujPhonetic: row.nameGujPhonetic,
+        eng: personRow.nameEng,
+        guj: personRow.nameGuj,
+        gujLipi: personRow.nameGujLipi,
+        gujPhonetic: personRow.nameGujPhonetic,
       },
       body: {
-        guj: row.bodyGuj,
-        gujLipi: row.bodyGujLipi,
-        gujPhonetic: row.bodyGujPhonetic,
+        guj: personRow.bodyGuj,
+        gujLipi: personRow.bodyGujLipi,
+        gujPhonetic: personRow.bodyGujPhonetic,
       },
     };
     persons[person.id] = person;
   }
 
   return {persons};
+}
+
+async function getPhrases(): Promise<{phrases: Obj<Phrase>}> {
+  const phrases: Obj<Phrase> = {};
+
+  const phrasesSql = `
+  SELECT
+    p.PhraseId as id,
+    p.LanguageId as langId,
+    Phrase as phrase,
+    PhraseLipi as phraseGujLipi,
+    PhrasePhonetic as phraseGujPhonetic,
+    Explanation as expl,
+    ExplanationLipi as explGujLipi,
+    ExplanationPhonetic as explGujPhonetic
+  FROM phrases p
+  LEFT JOIN phrasetranslations pt
+  ON p.PhraseId = pt.PhraseId
+  `;
+  const [phraseRows] = await db.execute(phrasesSql);
+
+  for (const phraseRow of phraseRows) {
+    const phrase: Phrase = {
+      kind: `Phrase`,
+      id: phraseRow.id,
+      phrase:
+        phraseRow.langId === 2
+          ? {
+              guj: phraseRow.phrase,
+              gujLipi: phraseRow.phraseGujLipi,
+              gujPhonetic: phraseRow.phraseGujPhonetic,
+            }
+          : {
+              eng: phraseRow.phrase,
+            },
+      explanation:
+        phraseRow.langId === 2
+          ? {
+              guj: phraseRow.expl,
+              gujLipi: phraseRow.explLipi,
+              gujPhonetic: phraseRow.explPhonetic,
+            }
+          : {
+              eng: phraseRow.expl,
+            },
+    };
+    phrases[phrase.id] = phrase;
+  }
+
+  return {phrases};
 }
 
 async function getScriptures(): Promise<{
@@ -141,6 +192,77 @@ async function getScriptures(): Promise<{
 
       chapters[chapter.id] = chapter;
       scripture.chapters.push({id: chapter.id, kind: chapter.kind});
+
+      const versesSql = `
+      SELECT
+        DocumentItemId as id,
+        Slug as slug,
+        EnglishTitle as titleEng,
+        (SELECT Title FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as titleGuj,
+        (SELECT TitleLipi FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as titleGujLipi,
+        (SELECT TitlePhonetic FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as titleGujPhonetic,
+        (SELECT Description FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 1) as descEng,
+        (SELECT Description FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as descGuj,
+        (SELECT DescriptionLipi FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as descGujLipi,
+        (SELECT DescriptionPhonetic FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as descGujPhonetic
+      FROM documentitems di
+      WHERE di.ParentDocumentItemId = ${chapter.id} AND di.DocumentItemTypeId = 1
+      ORDER BY Number
+      `;
+      const [verseRows] = await db.execute(versesSql);
+      for (const verseRow of verseRows) {
+        const verse: Verse = {
+          kind: `Verse`,
+          id: verseRow.id,
+          slug: verseRow.slug,
+          title: {
+            eng: verseRow.titleEng || ``,
+            guj: verseRow.titleGuj || ``,
+            gujLipi: verseRow.titleGujLipi || ``,
+            gujPhonetic: verseRow.titleGujPhonetic || ``,
+          },
+          description: {
+            eng: verseRow.descEng || ``,
+            guj: verseRow.descGuj || ``,
+            gujLipi: verseRow.descGujLipi || ``,
+            gujPhonetic: verseRow.descGujPhonetic || ``,
+          },
+          items: [],
+        };
+
+        verses[verse.id] = verse;
+        chapter.items.push({id: verse.id, kind: verse.kind});
+
+        const stanzasSql = `
+        SELECT
+          DocumentItemId as id,
+          Slug as slug,
+          (SELECT Body FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 1) as bodyEng,
+          (SELECT Body FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as bodyGuj,
+          (SELECT BodyLipi FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as bodyGujLipi,
+          (SELECT BodyPhonetic FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as bodyGujPhonetic
+        FROM documentitems di
+        WHERE di.ParentDocumentItemId = ${verse.id} AND di.DocumentItemTypeId = 6
+        ORDER BY Number
+        `;
+        const [stanzaRows] = await db.execute(stanzasSql);
+        for (const stanzaRow of stanzaRows) {
+          const stanza: Stanza = {
+            kind: `Stanza`,
+            id: stanzaRow.id,
+            slug: stanzaRow.slug,
+            body: {
+              eng: stanzaRow.bodyEng || ``,
+              guj: stanzaRow.bodyGuj || ``,
+              gujLipi: stanzaRow.bodyGujLipi || ``,
+              gujPhonetic: stanzaRow.bodyGujPhonetic || ``,
+            },
+          };
+
+          stanzas[stanza.id] = stanza;
+          verse.items.push({id: stanza.id, kind: stanza.kind});
+        }
+      }
     }
   }
 
@@ -148,15 +270,15 @@ async function getScriptures(): Promise<{
 }
 
 async function main() {
-  const persons = await getPersons();
-  const scriptures = await getScriptures();
-  Object.assign(objects, persons);
-  Object.assign(objects, scriptures);
-  objects.root.persons = Object.keys(objects.persons).map((key) => ({id: key, kind: `Person`}));
-  objects.root.scriptures = Object.keys(objects.scriptures).map((key) => ({
-    id: key,
-    kind: `Scripture`,
-  }));
+  const startTime = Date.now();
+  const {persons: Person} = await getPersons();
+  const {phrases: Phrase} = await getPhrases();
+  const {scriptures: Scripture, chapters: Chapter, verses: Verse, stanzas: Stanza} = await getScriptures();
+  Object.assign(objects, {Person, Scripture, Chapter, Verse, Stanza, Phrase});
+  objects.$Root.persons = Object.values(objects.Person).map(({id, kind}) => ({id, kind}));
+  objects.$Root.scriptures = Object.values(objects.Scripture).map(({id, kind}) => ({id, kind}));
+  const elapsedMs = Date.now() - startTime;
+  console.info(`elapsedMs`, elapsedMs);
   console.log(objects);
 }
 
