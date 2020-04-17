@@ -33,7 +33,7 @@ export interface Scripture {
   id: string;
   slug: string;
   title: Translations;
-  chapters: Array<Ref<Chapter>>;
+  items: Array<Ref<Chapter>>;
 }
 
 export interface Chapter {
@@ -59,6 +59,34 @@ export interface Stanza {
   id: string;
   slug: string;
   body: Translations;
+}
+
+export interface ReadingPlan {
+  kind: 'ReadingPlan';
+  id: string;
+  slug: string;
+  title: Translations;
+  description: Translations;
+  items: Array<Ref<ReadingPlanDay>>;
+}
+
+export interface ReadingPlanDay {
+  kind: 'ReadingPlanDay';
+  id: string;
+  slug: string;
+  title: Translations;
+  items: Array<Ref<ReadingPlanItem>>;
+}
+
+export interface ReadingPlanItem {
+  kind: 'ReadingPlanItem';
+  id: string;
+  slug: string;
+  title: Translations;
+  description: Translations;
+  refStanzas: Array<Ref<Stanza>>;
+  // image: Ref<ImageSrc>;
+  // audio: Ref<AudioSrc>; // TODO: figure out connections
 }
 
 export interface RootNav {

@@ -148,7 +148,7 @@ async function getScriptures(): Promise<{
         gujLipi: scriptureRow.titleGujLipi || ``,
         gujPhonetic: scriptureRow.titleGujPhonetic || ``,
       },
-      chapters: [],
+      items: [],
     };
 
     scriptures[scripture.id] = scripture;
@@ -191,7 +191,7 @@ async function getScriptures(): Promise<{
       };
 
       chapters[chapter.id] = chapter;
-      scripture.chapters.push({id: chapter.id, kind: chapter.kind});
+      scripture.items.push({id: chapter.id, kind: chapter.kind});
 
       const versesSql = `
       SELECT
