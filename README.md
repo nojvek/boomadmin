@@ -18,6 +18,14 @@ boomadmin - MySQL db explorer with SQL builder
 - Maps id columns to readable names as links e.g user_id -> user(id=user_id).name
 - Detailed view shows `Referenced By` pane with counts so related tables are easily found.
 
+## Personal Demo & Feedback
+
+Interested in a personal demo? I'd love to talk to you and see what cool app/site you're building and hear your data management pains. We can be internet friends! 🎊🙌
+
+Feel free to book a spot that suits your availability https://calendly.com/boomadmin/demo. 
+
+If you prefer email, hello [at] boomadmin.com
+
 ## TODO
 
 - Some way of authentication
