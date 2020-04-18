@@ -236,6 +236,14 @@ class App extends Component<{}, AppState> {
                       columnName: refersTo.destColumnName,
                       value: row[columnName],
                     })
+                : columnName === `OriginId` // this is a super hack
+                ? (row) =>
+                    makeHref({
+                      tableName: row[`$label$Origin_ConnectionTypeId`].toLowerCase(),
+                      columnName: dbSchema.tables[row[`$label$Origin_ConnectionTypeId`].toLowerCase()]
+                        .primaryColumnName as string,
+                      value: row[columnName],
+                    })
                 : null,
             } as TableColumn<any>;
           });

@@ -83,7 +83,7 @@ export interface ReadingPlanItem {
   id: string;
   slug: string;
   title: Translations;
-  description: Translations;
+  body: Translations;
   refStanzas: Array<Ref<Stanza>>;
   // image: Ref<ImageSrc>;
   // audio: Ref<AudioSrc>; // TODO: figure out connections
@@ -93,4 +93,5 @@ export interface RootNav {
   kind: 'RootNav';
   persons: Array<Ref<Person>>;
   scriptures: Array<Ref<Scripture>>;
+  readingPlans: Array<Ref<ReadingPlan>>;
 }

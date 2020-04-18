@@ -1,5 +1,18 @@
+import fs from 'fs';
 import mysql from 'mysql2';
-import {Scripture, Chapter, Verse, Stanza, Person, Obj, RootNav, Phrase} from './schema.d';
+import {
+  Scripture,
+  Chapter,
+  Verse,
+  Stanza,
+  Person,
+  Obj,
+  RootNav,
+  Phrase,
+  ReadingPlan,
+  ReadingPlanItem,
+  ReadingPlanDay,
+} from './schema.d';
 
 const db = mysql
   .createPool({
@@ -18,6 +31,9 @@ const objects = {
   Stanza: {} as Obj<Stanza>,
   Person: {} as Obj<Person>,
   Phrase: {} as Obj<Phrase>,
+  ReadingPlan: {} as Obj<ReadingPlan>,
+  ReadingPlanDay: {} as Obj<ReadingPlanDay>,
+  ReadingPlanItem: {} as Obj<ReadingPlanItem>,
 };
 
 async function getPersons(): Promise<{persons: Obj<Person>}> {
@@ -269,17 +285,149 @@ async function getScriptures(): Promise<{
   return {scriptures, chapters, verses, stanzas};
 }
 
+async function getReadingPlans(): Promise<{
+  readingPlans: Obj<ReadingPlan>;
+  readingPlanDays: Obj<ReadingPlanDay>;
+  readingPlanItems: Obj<ReadingPlanItem>;
+}> {
+  const readingPlans: Obj<ReadingPlan> = {};
+  const readingPlanDays: Obj<ReadingPlanDay> = {};
+  const readingPlanItems: Obj<ReadingPlanItem> = {};
+
+  const readingPlansSql = `
+  SELECT
+    DocumentId as id,
+    Slug as slug,
+    EnglishTitle as titleEng,
+    (SELECT Title FROM documenttranslations dt WHERE dt.DocumentId = d.DocumentId AND LanguageID = 2) as titleGuj,
+    (SELECT TitleLipi FROM documenttranslations dt WHERE dt.DocumentId = d.DocumentId AND LanguageID = 2) as titleGujLipi,
+    (SELECT TitlePhonetic FROM documenttranslations dt WHERE dt.DocumentId = d.DocumentId AND LanguageID = 2) as titleGujPhonetic,
+    (SELECT Description FROM documenttranslations dt WHERE dt.DocumentId = d.DocumentId AND LanguageID = 1) as descEng,
+    (SELECT Description FROM documenttranslations dt WHERE dt.DocumentId = d.DocumentId AND LanguageID = 2) as descGuj,
+    (SELECT DescriptionLipi FROM documenttranslations dt WHERE dt.DocumentId = d.DocumentId AND LanguageID = 2) as descGujLipi,
+    (SELECT DescriptionPhonetic FROM documenttranslations dt WHERE dt.DocumentId = d.DocumentId AND LanguageID = 2) as descGujPhonetic
+  FROM documents d
+  WHERE DocumentTypeId = 3
+  `;
+  const [readingPlanRows] = await db.execute(readingPlansSql);
+
+  for (const readingPlanRow of readingPlanRows) {
+    const readingPlan: ReadingPlan = {
+      kind: `ReadingPlan`,
+      id: readingPlanRow.id,
+      slug: readingPlanRow.slug,
+      title: {
+        eng: readingPlanRow.titleEng || ``,
+        guj: readingPlanRow.titleGuj || ``,
+        gujLipi: readingPlanRow.titleGujLipi || ``,
+        gujPhonetic: readingPlanRow.titleGujPhonetic || ``,
+      },
+      description: {
+        eng: readingPlanRow.descEng || ``,
+        guj: readingPlanRow.descGuj || ``,
+        gujLipi: readingPlanRow.descGujLipi || ``,
+        gujPhonetic: readingPlanRow.descGujPhonetic || ``,
+      },
+      items: [],
+    };
+
+    readingPlans[readingPlan.id] = readingPlan;
+
+    const readingPlanDaysSql = `
+    SELECT
+      DocumentItemId as id,
+      Slug as slug,
+      EnglishTitle as titleEng,
+      (SELECT Title FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as titleGuj,
+      (SELECT TitleLipi FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as titleGujLipi,
+      (SELECT TitlePhonetic FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as titleGujPhonetic
+    FROM documentitems di
+    WHERE di.DocumentID = ${readingPlan.id} AND di.DocumentItemTypeId = 8
+    ORDER BY Number
+    `;
+    const [readingPlanDayRows] = await db.execute(readingPlanDaysSql);
+    for (const readingPlanDayRow of readingPlanDayRows) {
+      const readingPlanDay: ReadingPlanDay = {
+        kind: `ReadingPlanDay`,
+        id: readingPlanDayRow.id,
+        slug: readingPlanDayRow.slug,
+        title: {
+          eng: readingPlanDayRow.titleEng || ``,
+          guj: readingPlanDayRow.titleGuj || ``,
+          gujLipi: readingPlanDayRow.titleGujLipi || ``,
+          gujPhonetic: readingPlanDayRow.titleGujPhonetic || ``,
+        },
+        items: [],
+      };
+
+      readingPlanDays[readingPlanDay.id] = readingPlanDay;
+      readingPlan.items.push({id: readingPlanDay.id, kind: readingPlanDay.kind});
+
+      const readingPlanItemsSql = `
+      SELECT
+        DocumentItemId as id,
+        Slug as slug,
+        EnglishTitle as titleEng,
+        (SELECT Title FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as titleGuj,
+        (SELECT TitleLipi FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as titleGujLipi,
+        (SELECT TitlePhonetic FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as titleGujPhonetic,
+        (SELECT Body FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 1) as bodyEng,
+        (SELECT Body FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as bodyGuj,
+        (SELECT BodyLipi FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as bodyGujLipi,
+        (SELECT BodyPhonetic FROM documentitemtranslations dit WHERE dit.DocumentItemId = di.DocumentItemId AND dit.LanguageID = 2) as bodyGujPhonetic
+      FROM documentitems di
+      WHERE di.ParentDocumentItemId = ${readingPlanDay.id} AND di.DocumentItemTypeId = 9
+      ORDER BY Number
+      `;
+      const [readingPlanItemRows] = await db.execute(readingPlanItemsSql);
+      for (const readingPlanItemRow of readingPlanItemRows) {
+        const readingPlanItem: ReadingPlanItem = {
+          kind: `ReadingPlanItem`,
+          id: readingPlanItemRow.id,
+          slug: readingPlanItemRow.slug,
+          title: {
+            eng: readingPlanItemRow.titleEng || ``,
+            guj: readingPlanItemRow.titleGuj || ``,
+            gujLipi: readingPlanItemRow.titleGujLipi || ``,
+            gujPhonetic: readingPlanItemRow.titleGujPhonetic || ``,
+          },
+          body: {
+            eng: readingPlanItemRow.bodyEng || ``,
+            guj: readingPlanItemRow.bodyGuj || ``,
+            gujLipi: readingPlanItemRow.bodyGujLipi || ``,
+            gujPhonetic: readingPlanItemRow.bodyGujPhonetic || ``,
+          },
+          refStanzas: [],
+        };
+
+        readingPlanItems[readingPlanItem.id] = readingPlanItem;
+        readingPlanDay.items.push({id: readingPlanItem.id, kind: readingPlanItem.kind});
+      }
+    }
+  }
+
+  return {readingPlans, readingPlanDays, readingPlanItems};
+}
+
 async function main() {
   const startTime = Date.now();
   const {persons: Person} = await getPersons();
   const {phrases: Phrase} = await getPhrases();
   const {scriptures: Scripture, chapters: Chapter, verses: Verse, stanzas: Stanza} = await getScriptures();
+  const {
+    readingPlans: ReadingPlan,
+    readingPlanDays: ReadingPlanDay,
+    readingPlanItems: ReadingPlanItem,
+  } = await getReadingPlans();
+
   Object.assign(objects, {Person, Scripture, Chapter, Verse, Stanza, Phrase});
+  Object.assign(objects, {ReadingPlan, ReadingPlanDay, ReadingPlanItem});
   objects.$Root.persons = Object.values(objects.Person).map(({id, kind}) => ({id, kind}));
   objects.$Root.scriptures = Object.values(objects.Scripture).map(({id, kind}) => ({id, kind}));
+  objects.$Root.readingPlans = Object.values(objects.ReadingPlan).map(({id, kind}) => ({id, kind}));
   const elapsedMs = Date.now() - startTime;
+  // fs.writeFileSync(`${__dirname}/objects.json`, JSON.stringify(objects), `utf8`);
   console.info(`elapsedMs`, elapsedMs);
-  console.log(objects);
 }
 
 main()
