@@ -14,6 +14,8 @@ import {
   ReadingPlanDay,
 } from './schema.d';
 
+import {Firestore} from "@google-cloud/firestore";
+
 const db = mysql
   .createPool({
     host: `localhost`,
@@ -62,15 +64,15 @@ async function getPersons(): Promise<{persons: Obj<Person>}> {
       id: personRow.id,
       slug: personRow.slug,
       name: {
-        eng: personRow.nameEng,
-        guj: personRow.nameGuj,
-        gujLipi: personRow.nameGujLipi,
-        gujPhonetic: personRow.nameGujPhonetic,
+        eng: personRow.nameEng || ``,
+        guj: personRow.nameGuj || ``,
+        gujLipi: personRow.nameGujLipi || ``,
+        gujPhonetic: personRow.nameGujPhonetic || ``,
       },
       body: {
-        guj: personRow.bodyGuj,
-        gujLipi: personRow.bodyGujLipi,
-        gujPhonetic: personRow.bodyGujPhonetic,
+        guj: personRow.bodyGuj || ``,
+        gujLipi: personRow.bodyGujLipi || ``,
+        gujPhonetic: personRow.bodyGujPhonetic || ``,
       },
     };
     persons[person.id] = person;
@@ -105,22 +107,22 @@ async function getPhrases(): Promise<{phrases: Obj<Phrase>}> {
       phrase:
         phraseRow.langId === 2
           ? {
-              guj: phraseRow.phrase,
-              gujLipi: phraseRow.phraseGujLipi,
-              gujPhonetic: phraseRow.phraseGujPhonetic,
+              guj: phraseRow.phrase  || ``,
+              gujLipi: phraseRow.phraseGujLipi  || ``,
+              gujPhonetic: phraseRow.phraseGujPhonetic  || ``,
             }
           : {
-              eng: phraseRow.phrase,
+              eng: phraseRow.phrase  || ``,
             },
       explanation:
         phraseRow.langId === 2
           ? {
-              guj: phraseRow.expl,
-              gujLipi: phraseRow.explLipi,
-              gujPhonetic: phraseRow.explPhonetic,
+              guj: phraseRow.expl || ``,
+              gujLipi: phraseRow.explLipi || ``,
+              gujPhonetic: phraseRow.explPhonetic || ``,
             }
           : {
-              eng: phraseRow.expl,
+              eng: phraseRow.expl || ``,
             },
     };
     phrases[phrase.id] = phrase;
@@ -207,7 +209,7 @@ async function getScriptures(): Promise<{
       };
 
       chapters[chapter.id] = chapter;
-      scripture.items.push({id: chapter.id, kind: chapter.kind});
+      scripture.items.push({ref: `${chapter.kind}/${chapter.id}`});
 
       const versesSql = `
       SELECT
@@ -247,7 +249,7 @@ async function getScriptures(): Promise<{
         };
 
         verses[verse.id] = verse;
-        chapter.items.push({id: verse.id, kind: verse.kind});
+        chapter.items.push({ref: `${verse.kind}/${verse.id}`});
 
         const stanzasSql = `
         SELECT
@@ -276,7 +278,7 @@ async function getScriptures(): Promise<{
           };
 
           stanzas[stanza.id] = stanza;
-          verse.items.push({id: stanza.id, kind: stanza.kind});
+          verse.items.push({ref: `${stanza.kind}/${stanza.id}`});
         }
       }
     }
@@ -361,7 +363,7 @@ async function getReadingPlans(): Promise<{
       };
 
       readingPlanDays[readingPlanDay.id] = readingPlanDay;
-      readingPlan.items.push({id: readingPlanDay.id, kind: readingPlanDay.kind});
+      readingPlan.items.push({ref: `${readingPlanDay.kind}/${readingPlanDay.id}`});
 
       const readingPlanItemsSql = `
       SELECT
@@ -401,12 +403,33 @@ async function getReadingPlans(): Promise<{
         };
 
         readingPlanItems[readingPlanItem.id] = readingPlanItem;
-        readingPlanDay.items.push({id: readingPlanItem.id, kind: readingPlanItem.kind});
+        readingPlanDay.items.push({ref: `${readingPlanItem.kind}/${readingPlanItem.id}`});
       }
     }
   }
 
   return {readingPlans, readingPlanDays, readingPlanItems};
+}
+
+
+async function syncToFirestore() {
+  console.info(`dumping to firestore`);
+
+  const fStore = new Firestore({keyFilename: `${__dirname}/blocka.sa-key.json`});
+  const startTime = Date.now();
+  for (const [key, objMap] of Object.entries(objects)) {
+    if (key !== `$Root`) continue;
+    const fCollection = fStore.collection(key);
+    const setPromises = [];
+    for (const [objKey, obj] of Object.entries(objMap)) {
+      setPromises.push(fCollection.doc(objKey).set(Array.isArray(obj) ? {items: obj} : obj));
+    }
+    console.log(`waiting for ${key} to sync ${setPromises.length} promises`);
+    await Promise.all(setPromises);
+  }
+
+  console.info(`dump to firestore elapsedMs`, Date.now() - startTime);
+  console.log(`done`);
 }
 
 async function main() {
@@ -422,12 +445,14 @@ async function main() {
 
   Object.assign(objects, {Person, Scripture, Chapter, Verse, Stanza, Phrase});
   Object.assign(objects, {ReadingPlan, ReadingPlanDay, ReadingPlanItem});
-  objects.$Root.persons = Object.values(objects.Person).map(({id, kind}) => ({id, kind}));
-  objects.$Root.scriptures = Object.values(objects.Scripture).map(({id, kind}) => ({id, kind}));
-  objects.$Root.readingPlans = Object.values(objects.ReadingPlan).map(({id, kind}) => ({id, kind}));
-  const elapsedMs = Date.now() - startTime;
+  objects.$Root.scriptures = Object.values(objects.Scripture).map(({id, kind}) => ({ref: `${kind}/${id}`}));
+  objects.$Root.readingPlans = Object.values(objects.ReadingPlan).map(({id, kind}) => ({ref: `${kind}/${id}`}));
   // fs.writeFileSync(`${__dirname}/objects.json`, JSON.stringify(objects), `utf8`);
-  console.info(`elapsedMs`, elapsedMs);
+  console.info(`get from mysql elapsedMs`, Date.now() - startTime);
+
+  // delete objects.Stanza;
+
+  await syncToFirestore();
 }
 
 main()

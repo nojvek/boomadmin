@@ -2,8 +2,7 @@ export type Obj<T> = Record<string, T>;
 
 export interface Ref<T> {
   value?: T;
-  kind: string;
-  id: string;
+  ref: string;
 }
 
 export interface Translations {
@@ -91,7 +90,6 @@ export interface ReadingPlanItem {
 
 export interface RootNav {
   kind: 'RootNav';
-  persons: Array<Ref<Person>>;
   scriptures: Array<Ref<Scripture>>;
   readingPlans: Array<Ref<ReadingPlan>>;
 }

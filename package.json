@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@fortawesome/fontawesome-pro": "5.13.0",
+    "@google-cloud/firestore": "3.7.4",
     "@types/classnames": "2.2.10",
     "@types/express": "4.17.3",
     "@types/pug": "2.0.4",

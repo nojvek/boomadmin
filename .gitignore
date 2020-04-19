@@ -9,3 +9,4 @@ yarn-error.log
 
 .DS_Store
 ._*
+/data/*/*.sa-key.json
