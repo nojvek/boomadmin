@@ -14,7 +14,7 @@ import {
   ReadingPlanDay,
 } from './schema.d';
 
-import {Firestore} from "@google-cloud/firestore";
+import {Firestore} from '@google-cloud/firestore';
 
 const db = mysql
   .createPool({
@@ -60,16 +60,18 @@ async function getPersons(): Promise<{persons: Obj<Person>}> {
 
   for (const personRow of personRows) {
     const person: Person = {
-      kind: `Person`,
+      type: `Person`,
       id: personRow.id,
       slug: personRow.slug,
       name: {
+        type: `Translations`,
         eng: personRow.nameEng || ``,
         guj: personRow.nameGuj || ``,
         gujLipi: personRow.nameGujLipi || ``,
         gujPhonetic: personRow.nameGujPhonetic || ``,
       },
       body: {
+        type: `Translations`,
         guj: personRow.bodyGuj || ``,
         gujLipi: personRow.bodyGujLipi || ``,
         gujPhonetic: personRow.bodyGujPhonetic || ``,
@@ -102,26 +104,30 @@ async function getPhrases(): Promise<{phrases: Obj<Phrase>}> {
 
   for (const phraseRow of phraseRows) {
     const phrase: Phrase = {
-      kind: `Phrase`,
+      type: `Phrase`,
       id: phraseRow.id,
       phrase:
         phraseRow.langId === 2
           ? {
-              guj: phraseRow.phrase  || ``,
-              gujLipi: phraseRow.phraseGujLipi  || ``,
-              gujPhonetic: phraseRow.phraseGujPhonetic  || ``,
+              type: `Translations`,
+              guj: phraseRow.phrase || ``,
+              gujLipi: phraseRow.phraseGujLipi || ``,
+              gujPhonetic: phraseRow.phraseGujPhonetic || ``,
             }
           : {
-              eng: phraseRow.phrase  || ``,
+              type: `Translations`,
+              eng: phraseRow.phrase || ``,
             },
       explanation:
         phraseRow.langId === 2
           ? {
+              type: `Translations`,
               guj: phraseRow.expl || ``,
               gujLipi: phraseRow.explLipi || ``,
               gujPhonetic: phraseRow.explPhonetic || ``,
             }
           : {
+              type: `Translations`,
               eng: phraseRow.expl || ``,
             },
     };
@@ -157,10 +163,11 @@ async function getScriptures(): Promise<{
 
   for (const scriptureRow of scriptureRows) {
     const scripture: Scripture = {
-      kind: `Scripture`,
+      type: `Scripture`,
       id: scriptureRow.id,
       slug: scriptureRow.slug,
       title: {
+        type: `Translations`,
         eng: scriptureRow.titleEng || ``,
         guj: scriptureRow.titleGuj || ``,
         gujLipi: scriptureRow.titleGujLipi || ``,
@@ -190,16 +197,18 @@ async function getScriptures(): Promise<{
     const [chapterRows] = await db.execute(chaptersSql);
     for (const chapterRow of chapterRows) {
       const chapter: Chapter = {
-        kind: `Chapter`,
+        type: `Chapter`,
         id: chapterRow.id,
         slug: chapterRow.slug,
         title: {
+          type: `Translations`,
           eng: chapterRow.titleEng || ``,
           guj: chapterRow.titleGuj || ``,
           gujLipi: chapterRow.titleGujLipi || ``,
           gujPhonetic: chapterRow.titleGujPhonetic || ``,
         },
         description: {
+          type: `Translations`,
           eng: chapterRow.descEng || ``,
           guj: chapterRow.descGuj || ``,
           gujLipi: chapterRow.descGujLipi || ``,
@@ -209,7 +218,7 @@ async function getScriptures(): Promise<{
       };
 
       chapters[chapter.id] = chapter;
-      scripture.items.push({ref: `${chapter.kind}/${chapter.id}`});
+      scripture.items.push({type: `Ref`, ref: `${chapter.type}/${chapter.id}`});
 
       const versesSql = `
       SELECT
@@ -230,16 +239,18 @@ async function getScriptures(): Promise<{
       const [verseRows] = await db.execute(versesSql);
       for (const verseRow of verseRows) {
         const verse: Verse = {
-          kind: `Verse`,
+          type: `Verse`,
           id: verseRow.id,
           slug: verseRow.slug,
           title: {
+            type: `Translations`,
             eng: verseRow.titleEng || ``,
             guj: verseRow.titleGuj || ``,
             gujLipi: verseRow.titleGujLipi || ``,
             gujPhonetic: verseRow.titleGujPhonetic || ``,
           },
           description: {
+            type: `Translations`,
             eng: verseRow.descEng || ``,
             guj: verseRow.descGuj || ``,
             gujLipi: verseRow.descGujLipi || ``,
@@ -249,7 +260,7 @@ async function getScriptures(): Promise<{
         };
 
         verses[verse.id] = verse;
-        chapter.items.push({ref: `${verse.kind}/${verse.id}`});
+        chapter.items.push({type: `Ref`, ref: `${verse.type}/${verse.id}`});
 
         const stanzasSql = `
         SELECT
@@ -266,10 +277,11 @@ async function getScriptures(): Promise<{
         const [stanzaRows] = await db.execute(stanzasSql);
         for (const stanzaRow of stanzaRows) {
           const stanza: Stanza = {
-            kind: `Stanza`,
+            type: `Stanza`,
             id: stanzaRow.id,
             slug: stanzaRow.slug,
             body: {
+              type: `Translations`,
               eng: stanzaRow.bodyEng || ``,
               guj: stanzaRow.bodyGuj || ``,
               gujLipi: stanzaRow.bodyGujLipi || ``,
@@ -278,7 +290,7 @@ async function getScriptures(): Promise<{
           };
 
           stanzas[stanza.id] = stanza;
-          verse.items.push({ref: `${stanza.kind}/${stanza.id}`});
+          verse.items.push({type: `Ref`, ref: `${stanza.type}/${stanza.id}`});
         }
       }
     }
@@ -315,16 +327,18 @@ async function getReadingPlans(): Promise<{
 
   for (const readingPlanRow of readingPlanRows) {
     const readingPlan: ReadingPlan = {
-      kind: `ReadingPlan`,
+      type: `ReadingPlan`,
       id: readingPlanRow.id,
       slug: readingPlanRow.slug,
       title: {
+        type: `Translations`,
         eng: readingPlanRow.titleEng || ``,
         guj: readingPlanRow.titleGuj || ``,
         gujLipi: readingPlanRow.titleGujLipi || ``,
         gujPhonetic: readingPlanRow.titleGujPhonetic || ``,
       },
       description: {
+        type: `Translations`,
         eng: readingPlanRow.descEng || ``,
         guj: readingPlanRow.descGuj || ``,
         gujLipi: readingPlanRow.descGujLipi || ``,
@@ -350,10 +364,11 @@ async function getReadingPlans(): Promise<{
     const [readingPlanDayRows] = await db.execute(readingPlanDaysSql);
     for (const readingPlanDayRow of readingPlanDayRows) {
       const readingPlanDay: ReadingPlanDay = {
-        kind: `ReadingPlanDay`,
+        type: `ReadingPlanDay`,
         id: readingPlanDayRow.id,
         slug: readingPlanDayRow.slug,
         title: {
+          type: `Translations`,
           eng: readingPlanDayRow.titleEng || ``,
           guj: readingPlanDayRow.titleGuj || ``,
           gujLipi: readingPlanDayRow.titleGujLipi || ``,
@@ -363,7 +378,7 @@ async function getReadingPlans(): Promise<{
       };
 
       readingPlanDays[readingPlanDay.id] = readingPlanDay;
-      readingPlan.items.push({ref: `${readingPlanDay.kind}/${readingPlanDay.id}`});
+      readingPlan.items.push({type: `Ref`, ref: `${readingPlanDay.type}/${readingPlanDay.id}`});
 
       const readingPlanItemsSql = `
       SELECT
@@ -384,16 +399,18 @@ async function getReadingPlans(): Promise<{
       const [readingPlanItemRows] = await db.execute(readingPlanItemsSql);
       for (const readingPlanItemRow of readingPlanItemRows) {
         const readingPlanItem: ReadingPlanItem = {
-          kind: `ReadingPlanItem`,
+          type: `ReadingPlanItem`,
           id: readingPlanItemRow.id,
           slug: readingPlanItemRow.slug,
           title: {
+            type: `Translations`,
             eng: readingPlanItemRow.titleEng || ``,
             guj: readingPlanItemRow.titleGuj || ``,
             gujLipi: readingPlanItemRow.titleGujLipi || ``,
             gujPhonetic: readingPlanItemRow.titleGujPhonetic || ``,
           },
           body: {
+            type: `Translations`,
             eng: readingPlanItemRow.bodyEng || ``,
             guj: readingPlanItemRow.bodyGuj || ``,
             gujLipi: readingPlanItemRow.bodyGujLipi || ``,
@@ -403,7 +420,7 @@ async function getReadingPlans(): Promise<{
         };
 
         readingPlanItems[readingPlanItem.id] = readingPlanItem;
-        readingPlanDay.items.push({ref: `${readingPlanItem.kind}/${readingPlanItem.id}`});
+        readingPlanDay.items.push({type: `Ref`, ref: `${readingPlanItem.type}/${readingPlanItem.id}`});
       }
     }
   }
@@ -411,14 +428,12 @@ async function getReadingPlans(): Promise<{
   return {readingPlans, readingPlanDays, readingPlanItems};
 }
 
-
 async function syncToFirestore() {
   console.info(`dumping to firestore`);
 
   const fStore = new Firestore({keyFilename: `${__dirname}/blocka.sa-key.json`});
   const startTime = Date.now();
   for (const [key, objMap] of Object.entries(objects)) {
-    if (key !== `$Root`) continue;
     const fCollection = fStore.collection(key);
     const setPromises = [];
     for (const [objKey, obj] of Object.entries(objMap)) {
@@ -445,8 +460,14 @@ async function main() {
 
   Object.assign(objects, {Person, Scripture, Chapter, Verse, Stanza, Phrase});
   Object.assign(objects, {ReadingPlan, ReadingPlanDay, ReadingPlanItem});
-  objects.$Root.scriptures = Object.values(objects.Scripture).map(({id, kind}) => ({ref: `${kind}/${id}`}));
-  objects.$Root.readingPlans = Object.values(objects.ReadingPlan).map(({id, kind}) => ({ref: `${kind}/${id}`}));
+  objects.$Root.scriptures = Object.values(objects.Scripture).map(({id, type: kind}) => ({
+    type: `Ref`,
+    ref: `${kind}/${id}`,
+  }));
+  objects.$Root.readingPlans = Object.values(objects.ReadingPlan).map(({id, type: kind}) => ({
+    type: `Ref`,
+    ref: `${kind}/${id}`,
+  }));
   // fs.writeFileSync(`${__dirname}/objects.json`, JSON.stringify(objects), `utf8`);
   console.info(`get from mysql elapsedMs`, Date.now() - startTime);
 
