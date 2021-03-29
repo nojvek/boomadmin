@@ -35,7 +35,7 @@
   resolved "https://npm.fontawesome.com/@fortawesome/fontawesome-pro/-/5.13.0/fontawesome-pro-5.13.0.tgz#fde32ed4d9933c4c9b60b8a74a79c67eba58d984"
   integrity sha512-97Su0vmIuCdxrklVbjTzY1i16nvyKaqFmFBgrTsgeCVmyIWXNydiS62jhKlkwH9sMb8Tw4wYQ+J1EKbRILowxw==
 
-"@google-cloud/firestore@^3.7.4":
+"@google-cloud/firestore@3.7.4":
   version "3.7.4"
   resolved "https://registry.yarnpkg.com/@google-cloud/firestore/-/firestore-3.7.4.tgz#8a9f3ace01d3bf29a8a1bad3c617035eb14b6cc6"
   integrity sha512-RBMG4uZFHeQPFMHTRFMyQ7LDQTLa0f+U0hLAa/7XWjpZHgxKuOWBonsv+C3geymAwShIZSoV/NpNh9tBK7YF5g==

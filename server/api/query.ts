@@ -144,29 +144,29 @@ export async function getDbSchema(): Promise<DbSchema> {
   }
 
   // map table column references
-  const refRows: DbColumnRefRow[] = (await refsPromise)[0].map(camelCaseObj);
-  for (const refRow of refRows) {
-    const srcTable = dbTables[refRow.tableName];
-    if (!srcTable) {
-      continue; // skip reference mapping for views
-    }
+  // const refRows: DbColumnRefRow[] = (await refsPromise)[0].map(camelCaseObj);
+  // for (const refRow of refRows) {
+  //   const srcTable = dbTables[refRow.tableName];
+  //   if (!srcTable) {
+  //     continue; // skip reference mapping for views
+  //   }
 
-    const srcColumn = srcTable.columns[refRow.columnName];
-    const referencedTable = dbTables[refRow.referencedTableName];
+  //   const srcColumn = srcTable.columns[refRow.columnName];
+  //   const referencedTable = dbTables[refRow.referencedTableName];
 
-    srcColumn.refersTo = {
-      srcColumnName: refRow.columnName,
-      destTableName: refRow.referencedTableName,
-      destColumnName: refRow.referencedColumnName,
-    };
+  //   srcColumn.refersTo = {
+  //     srcColumnName: refRow.columnName,
+  //     destTableName: refRow.referencedTableName,
+  //     destColumnName: refRow.referencedColumnName,
+  //   };
 
-    referencedTable.referencedBy = referencedTable.referencedBy || [];
-    referencedTable.referencedBy.push({
-      srcColumnName: refRow.referencedColumnName,
-      destTableName: refRow.tableName,
-      destColumnName: refRow.columnName,
-    });
-  }
+  //   referencedTable.referencedBy = referencedTable.referencedBy || [];
+  //   referencedTable.referencedBy.push({
+  //     srcColumnName: refRow.referencedColumnName,
+  //     destTableName: refRow.tableName,
+  //     destColumnName: refRow.columnName,
+  //   });
+  // }
 
   // get accurate count of tables since innodb can return very inaccurate results
   // only do it if the estimated row count <10k, otherwise it takes a really long time for large tables

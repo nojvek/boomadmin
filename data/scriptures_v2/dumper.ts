@@ -433,8 +433,10 @@ async function syncToFirestore() {
 
   const fStore = new Firestore({keyFilename: `${__dirname}/blocka.sa-key.json`});
   const startTime = Date.now();
+  const pathPrefix = `projects/sw-faith-vachnamrut`;
+
   for (const [key, objMap] of Object.entries(objects)) {
-    const fCollection = fStore.collection(key);
+    const fCollection = fStore.collection(`${pathPrefix}/${key}`);
     const setPromises = [];
     for (const [objKey, obj] of Object.entries(objMap)) {
       setPromises.push(fCollection.doc(objKey).set(Array.isArray(obj) ? {items: obj} : obj));
